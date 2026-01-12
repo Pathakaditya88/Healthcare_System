@@ -1,15 +1,12 @@
 const express = require('express');
 const mongoose = require('mongoose');
-const cors = require('cors');
 const dotenv = require('dotenv');
 
 // Load environment variables from .env
 dotenv.config();
-
+const cors = require('cors');
 const app = express();
-
-// Middleware (similar to app.add_middleware in your FastAPI code)
-app.use(cors());
+app.use(cors()); // Put this before your routes!
 app.use(express.json()); // Allows the server to understand JSON data
 // Add this line after app.use(express.json()):
 const authRoutes = require('./Routes/authRoutes');

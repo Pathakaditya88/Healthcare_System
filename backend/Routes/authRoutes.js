@@ -1,9 +1,10 @@
 const express = require('express');
 const router = express.Router();
-const { registerUser, loginUser } = require('../controllers/authController');
+// Use curly braces to pull the functions out of the controller
+const { register, login } = require('../controllers/authController');
 
-// Routes matching your original API structure
-router.post('/register', registerUser);
-router.post('/login', loginUser);
+// Ensure these are NOT undefined
+router.post('/register', register);
+router.post('/login', login);
 
 module.exports = router;
