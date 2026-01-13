@@ -1,10 +1,12 @@
 const express = require('express');
 const router = express.Router();
-// Use curly braces to pull the functions out of the controller
-const { register, login } = require('../controllers/authController');
+// Ensure the path to authController is correct
+const { register, login } = require('../controllers/authController'); 
 
-// Ensure these are NOT undefined
-router.post('/register', register);
+// Check these lines - if 'register' or 'login' is undefined, it crashes here
+router.post('/register', register); 
 router.post('/login', login);
 
 module.exports = router;
+console.log("Register Function:", register);
+console.log("Login Function:", login);

@@ -7,28 +7,47 @@ import {
   LogOut, 
   Activity,
   Clock,
-  ClipboardCheck
+  ClipboardCheck,
+  MoreVertical
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import axios from 'axios';
 
 const Dashboard = () => {
   const [user, setUser] = useState(null);
+  const [appointments, setAppointments] = useState([]);
+  const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
 
   useEffect(() => {
-    // Get user data from localStorage
     const savedUser = localStorage.getItem('user');
-    if (savedUser) {
+    const token = localStorage.getItem('token');
+
+    if (savedUser && token) {
       setUser(JSON.parse(savedUser));
+      fetchAppointments(token);
     } else {
-      // If no user is found, kick them back to login
       navigate('/');
     }
   }, [navigate]);
 
+  const fetchAppointments = async (token) => {
+    try {
+      const response = await axios.get('http://localhost:5000/api/appointments/my', {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      setAppointments(response.data);
+    } catch (error) {
+      console.error("Error fetching appointments:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const handleLogout = () => {
-    localStorage.clear();
-    navigate('/');
+    localStorage.removeItem('token');
+    localStorage.removeItem('user');
+    navigate('/', { replace: true });
   };
 
   if (!user) return null;
@@ -72,7 +91,7 @@ const Dashboard = () => {
         <header className="flex justify-between items-center mb-8">
           <div>
             <h1 className="text-2xl font-bold text-gray-800">Welcome back, {user.name}!</h1>
-            <p className="text-gray-500">Here's what's happening with your health today.</p>
+            <p className="text-gray-500">You have {appointments.length} upcoming appointments.</p>
           </div>
           <div className="flex items-center gap-3">
             <div className="text-right">
@@ -90,8 +109,10 @@ const Dashboard = () => {
           <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 flex items-center gap-4">
             <div className="bg-blue-100 p-3 rounded-xl text-blue-600"><Clock /></div>
             <div>
-              <p className="text-sm text-gray-500">Next Appointment</p>
-              <p className="text-lg font-bold">Tomorrow, 10:00 AM</p>
+              <p className="text-sm text-gray-500">Next Visit</p>
+              <p className="text-lg font-bold">
+                {appointments.length > 0 ? new Date(appointments[0].date).toLocaleDateString() : 'No pending'}
+              </p>
             </div>
           </div>
           <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 flex items-center gap-4">
@@ -110,11 +131,52 @@ const Dashboard = () => {
           </div>
         </div>
 
-        {/* Placeholder for Appointments Table */}
-        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
-          <h3 className="text-lg font-bold text-gray-800 mb-4">Upcoming Appointments</h3>
-          <div className="h-40 flex items-center justify-center border-2 border-dashed border-gray-100 rounded-xl">
-            <p className="text-gray-400">No appointments scheduled for this week.</p>
+        {/* Appointments Table */}
+        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+          <div className="p-6 border-b border-gray-50 flex justify-between items-center">
+            <h3 className="text-lg font-bold text-gray-800">Upcoming Appointments</h3>
+            <button className="text-blue-600 text-sm font-semibold hover:underline">+ Book New</button>
+          </div>
+          
+          <div className="overflow-x-auto">
+            <table className="w-full text-left">
+              <thead className="bg-gray-50 text-gray-500 text-sm uppercase">
+                <tr>
+                  <th className="px-6 py-4 font-semibold">Doctor</th>
+                  <th className="px-6 py-4 font-semibold">Reason</th>
+                  <th className="px-6 py-4 font-semibold">Date</th>
+                  <th className="px-6 py-4 font-semibold">Status</th>
+                  <th className="px-6 py-4"></th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-gray-50">
+                {loading ? (
+                  <tr><td colSpan="5" className="text-center py-10 text-gray-400">Loading appointments...</td></tr>
+                ) : appointments.length === 0 ? (
+                  <tr><td colSpan="5" className="text-center py-10 text-gray-400">No appointments found.</td></tr>
+                ) : (
+                  appointments.map((apt) => (
+                    <tr key={apt._id} className="hover:bg-gray-50 transition">
+                      <td className="px-6 py-4 font-medium text-gray-800">{apt.doctorName}</td>
+                      <td className="px-6 py-4 text-gray-600">{apt.reason}</td>
+                      <td className="px-6 py-4 text-gray-600">
+                        {new Date(apt.date).toLocaleDateString()}
+                      </td>
+                      <td className="px-6 py-4">
+                        <span className={`px-3 py-1 rounded-full text-xs font-medium ${
+                          apt.status === 'Scheduled' ? 'bg-blue-100 text-blue-700' : 'bg-green-100 text-green-700'
+                        }`}>
+                          {apt.status}
+                        </span>
+                      </td>
+                      <td className="px-6 py-4 text-right">
+                        <button className="text-gray-400 hover:text-gray-600"><MoreVertical size={18}/></button>
+                      </td>
+                    </tr>
+                  ))
+                )}
+              </tbody>
+            </table>
           </div>
         </div>
       </main>

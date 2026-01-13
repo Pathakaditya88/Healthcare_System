@@ -1,6 +1,6 @@
 import { useState } from 'react';
-import { Lock, Mail, Activity, Loader2 } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom'; // Add Link here
+import { Mail, Lock, Activity, Loader2 } from 'lucide-react';
 import axios from 'axios';
 
 const Login = () => {
@@ -115,9 +115,13 @@ const Login = () => {
           <p className="text-xs text-gray-400">
             Secure HIPAA-compliant login
           </p>
+          <p className="mt-6 text-center text-sm text-gray-600">
+            Don't have an account? <Link to="/signup" className="text-blue-600 font-semibold">Sign Up</Link>
+          </p>
         </div>
       </div>
     </div>
+    
   );
 };
 
